@@ -119,7 +119,7 @@ Pull requests are welcome! If you'd like to contribute:
 
 ## 👤 Author
 
-  * **remissg** - [GitHub Profile](https://www.google.com/search?q=https://github.com/remissg)
+  * **remissg** - [GitHub Profile](https://github.com/remissg)
 
 ## 📜 License
 
