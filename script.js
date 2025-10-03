@@ -36,7 +36,7 @@ function toggleScientific() {
         btn.classList.toggle("hidden", !sciMode); 
     });
     if (!sciMode) {
-        allBtns.forEach(btn => btn.classList.add("small-height"));
+        allBtns.forEach(btn => allBtns.forEach(btn => btn.classList.add("small-height")));
     } else {
         allBtns.forEach(btn => allBtns.forEach(btn => btn.classList.remove("small-height")));
     }
@@ -45,7 +45,9 @@ function toggleScientific() {
 
 function addImplicitMultiplication(inputStr) {
     let result = inputStr;
-    result = result.replace(/(\d+|\)|\.)(?=\()/g, '$1*');
+    // FIX: Added '^' to prevent inserting '*' between a number and '^' (e.g., 3^2 remains 3^2, not 3*^2)
+    result = result.replace(/(\d+|\)|\.)(?=[(lnlogsincostan√eπ^])/g, '$1*'); 
+    result = result.replace(/([eπ])(?=\d|ln|log|sin|cos|tan|√)/g, '$1*');
     return result;
 }
 
@@ -63,44 +65,29 @@ arr.forEach(button => {
 
         if (btnValue == "=") {
             try {
-                let expr = addImplicitMultiplication(str);
+                let expr = addImplicitMultiplication(str); 
                 const DEG_TO_RAD = Math.PI / 180;
-                // ADDED: Constant for converting radians to degrees for inverse trig results
-                const RAD_TO_DEG = 180 / Math.PI; 
 
-                expr = expr.replace(/((?:\d+(?:\.\d+)?)|[)eπ])?√((?:\d+(?:\.\d+)?)|[eπ]|(?:\(.+?\)))/g, (match, base, radicand) => {
-                    const rBase = base || '2'; 
+                // argPattern: a numeric value (with optional decimal), or a constant, or a parenthetical block.
+                const argPattern = '((?:\\d+(?:\\.\\d+)?)|[eπ]|(?:\(.+?\)))'; 
+
+                // 1. Root (Square Root ONLY)
+                const sqrtRegex = new RegExp(`√(${argPattern})`, 'g');
+                
+                expr = expr.replace(sqrtRegex, (match, radicand) => {
                     const rootArg = radicand.startsWith('(') && radicand.endsWith(')') ? radicand : `(${radicand})`;
-                    const power = `1/(${rBase})`;
-                    return `Math.pow${rootArg}, ${power})`;
+                    return `Math.sqrt(${rootArg})`; 
                 });
                 
+                // 2. Factorial
                 expr = expr.replace(/(\d+(\.\d+)?|\))!/g, (match, p1) => {
                     return `factorial(${p1})`;
                 });
                 
+                // 3. Percentage
                 expr = expr.replace(/(\d+(\.\d+)?)%/g, '($1/100)');
-
                 
-                const argPattern = '((?:\\d+(?:\\.\\d+)?)|[eπ]|(?:\(.+?\)))'; 
-
-                // ADDED: New regex replacements for inverse trigonometric functions (sin^-1, cos^-1, tan^-1)
-                expr = expr.replace(new RegExp(`sin\\^-1${argPattern}`, 'g'), (match, arg) => {
-                    // Inverse trig functions return a result in radians, so we multiply by RAD_TO_DEG
-                    const finalArg = arg.startsWith('(') && arg.endsWith(')') ? arg : `(${arg})`;
-                    return `(Math.asin(${finalArg}) * ${RAD_TO_DEG})`;
-                });
-                expr = expr.replace(new RegExp(`cos\\^-1${argPattern}`, 'g'), (match, arg) => {
-                    const finalArg = arg.startsWith('(') && arg.endsWith(')') ? arg : `(${arg})`;
-                    return `(Math.acos(${finalArg}) * ${RAD_TO_DEG})`;
-                });
-                expr = expr.replace(new RegExp(`tan\\^-1${argPattern}`, 'g'), (match, arg) => {
-                    const finalArg = arg.startsWith('(') && arg.endsWith(')') ? arg : `(${arg})`;
-                    return `(Math.atan(${finalArg}) * ${RAD_TO_DEG})`;
-                });
-                // END ADDED
-
-                // Existing regex replacements for standard trig functions
+                // 4. Normal Trigonometric Functions
                 expr = expr.replace(new RegExp(`sin${argPattern}`, 'g'), (match, arg) => {
                     const finalArg = arg.startsWith('(') && arg.endsWith(')') ? arg : `(${arg})`;
                     return `Math.sin(${finalArg} * ${DEG_TO_RAD})`;
@@ -114,15 +101,18 @@ arr.forEach(button => {
                     return `Math.tan(${finalArg} * ${DEG_TO_RAD})`;
                 });
                 
-
-                expr = expr.replace(/π/g, `Math.PI`);
-                expr = expr.replace(/\^/g, '**'); 
-                expr = expr.replace(/e/g, `Math.E`);
-
-                
-                expr = expr.replace(new RegExp(`ln${argPattern}`, 'g'), 'Math.log($1)');
+                // 5. LOGARITHMIC FUNCTIONS
                 expr = expr.replace(new RegExp(`log${argPattern}`, 'g'), 'Math.log10($1)');
                 
+                
+                // 6. CONSTANTS AND EXPONENTS - REORDERED FOR CORRECT PARSING
+                // MUST RESOLVE CONSTANTS FIRST: e and π are JavaScript identifiers, Math.E and Math.PI are numbers.
+                expr = expr.replace(/π/g, `Math.PI`);
+                expr = expr.replace(/e/g, `Math.E`);
+                
+                // THEN RESOLVE EXPONENT: Now that 'e' is Math.E, 'e^2' becomes 'Math.E^2', which is correctly parsed as 'Math.E**2'
+                expr = expr.replace(/\^/g, '**'); 
+
                 let evaluationString = `
                     (function() {
                         const factorial = ${factorial.toString()};
@@ -133,7 +123,11 @@ arr.forEach(button => {
 
                 
                 if (isNaN(rawResult) || !isFinite(rawResult)) {
-                    str = "Error";
+                    if (expr.includes('Math.log(') || expr.includes('Math.log10(')) {
+                        str = "Invalid Input";
+                    } else {
+                        str = "Error";
+                    }
                 } else {
                     str = String(rawResult.toFixed(10).replace(/\.?0+$/, ''));
                 }
@@ -154,14 +148,7 @@ arr.forEach(button => {
             toggleScientific(); 
         }
         else if (btnValue == "√") {
-            const lastChar = str.slice(-1);
-            if (/\d|\)/.test(lastChar) && !str.endsWith("√")) {
-                str += "√"; 
-            } else if (/\D/.test(lastChar) || str.length === 0) {
-                str += "√"; 
-            } else {
-                 str += "√"; 
-            }
+            str += "√"; 
             inp.value = str;
         }
         else if (btnValue === "π") {
@@ -194,29 +181,31 @@ arr.forEach(button => {
               }
             inp.value = str;
         }
-        // MODIFIED: This logic block now handles all trig, log, and inverse trig functions (when inv is pressed after one of them).
-        else if (btnValue === "ln" || btnValue === "log" || btnValue === "sin" || btnValue === "cos" || btnValue === "tan") {
+        
+        // Function button presses (log, sin, cos, tan)
+        else if (btnValue === "log" || btnValue === "sin" || btnValue === "cos" || btnValue === "tan") {
             const lastChar = str.slice(-1);
             // Add multiplication operator if preceding character is a number, parenthesis, or constant
             if (/\d|\)|π|e/.test(lastChar)) {
                 str += "*";
             }
-            
+            // Only append the function name (NO opening parenthesis)
             str += btnValue; 
+            inp.value = str;
+        }
+        // New e^x button logic
+        else if (btnValue === "e^x") {
+            const lastChar = str.slice(-1);
+            if (/\d|\)|π|e/.test(lastChar)) {
+                str += "*"; // Implicit multiplication before the function
+            }
+            str += "e^"; // Adds the "e" constant followed by the exponent operator
             inp.value = str;
         }
         
         else if (btnValue === "inv") {
-            // ADDED: Check if the previous entry was a trigonometric or log function
-            const lastFuncMatch = str.match(/(sin|cos|tan|log|ln)$/);
-            
-            if (lastFuncMatch) {
-                // If it was a function, append ^-1 to make it an inverse function (e.g., 'sin^-1')
-                str += "^-1"; 
-            } else {
-                // If not, append it as a standalone power of -1 operator
-                str += "^-1"; 
-            }
+            // Inv is treated as generic power operator
+            str += "^-1"; 
             inp.value = str;
         }
         
@@ -245,10 +234,8 @@ arr.forEach(button => {
         }
     });
 });
-// (The keydown event listener remains the same, assuming 'i' maps to the 'inv' button)
-// ...
-// ... (All keydown logic is unchanged)
-// ...
+
+// Keydown logic (no changes here, keeping existing functionality)
 document.addEventListener("keydown", (e) => {
     if (document.activeElement === inp) return; 
     const key = e.key;
@@ -324,6 +311,7 @@ document.addEventListener("keydown", (e) => {
                 e.preventDefault();
             }
         } else if (key === "e") { 
+            // 'e' key should now map to the 'e' constant button
             targetButton = findButton("e");
             if (targetButton) {
                 targetButton.click();
@@ -333,21 +321,21 @@ document.addEventListener("keydown", (e) => {
         } else if (key === "s") { 
             targetButton = findButton("sin");
             if (targetButton) {
-                targetButton.click();
+                targetButton.click(); 
                 simulateButtonPress(targetButton); 
                 e.preventDefault();
             }
         } else if (key === "c") { 
             targetButton = findButton("cos");
             if (targetButton) {
-                targetButton.click();
+                targetButton.click(); 
                 simulateButtonPress(targetButton);
                 e.preventDefault();
             }
         } else if (key === "t") { 
             targetButton = findButton("tan");
             if (targetButton) {
-                targetButton.click();
+                targetButton.click(); 
                 simulateButtonPress(targetButton); 
                 e.preventDefault();
             }
@@ -366,20 +354,24 @@ document.addEventListener("keydown", (e) => {
                 e.preventDefault();
             }
         } else if (key === "l") { 
+            // Using 'L' for 'log' (base 10)
             targetButton = findButton("log");
             if (targetButton) {
-                targetButton.click();
+                targetButton.click(); 
                 simulateButtonPress(targetButton); 
                 e.preventDefault();
             }
-        } else if (key === "n") { 
-             targetButton = findButton("ln");
+        } 
+        else if (key === "x") { 
+            // Using 'X' for 'e^x'
+            targetButton = findButton("e^x"); 
             if (targetButton) {
-                targetButton.click();
+                targetButton.click(); 
                 simulateButtonPress(targetButton); 
                 e.preventDefault();
             }
-        } else if (key === "i") { 
+        }
+        else if (key === "i") { 
             targetButton = findButton("inv");
             if (targetButton) {
                 targetButton.click();
