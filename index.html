@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scientific Calculator by @remissg</title>
+  <script src="https://kit.fontawesome.com/d64af07002.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="calculator">
+    <input type="text" placeholder="0" id="inputBox">
+    <div class="buttons">
+      <!-- Row 1 -->
+      <div>
+        <button data-action="toggleSci" id="sci" class="hov" style="color: #ea7070;">Sci</button>
+        <button data-value="Math.sqrt" class="sci hov" style="font-size: 25px;">√</button>
+        <button data-value="Math.PI" class="sci hov" style="font-size: 25px;">π</button>
+        <button data-value="Math.pow" class="sci hov" style="font-size: 25px;">^</button>
+        
+      </div>
+      <!-- Row 2 -->
+      <div>
+        <button data-value="factorial" class="sci hov ">x!</button>
+        <button data-value="Math.sin" class="sci  hov">sin</button>
+        <button data-value="Math.cos" class="sci  hov">cos</button>
+        <button data-value="Math.tan" class="sci  hov">tan</button>
+      </div>
+      <!-- Row 3 -->
+      <div>
+        <button data-value="Math.tan" class="sci  hov">inv</button>
+        <button data-value="Math.E" class="sci hov" style="font-size: 25px;">e</button>
+        <button data-value="Math.log" class="sci  hov">ln</button>
+        <button data-value="Math.log10" class="sci  hov">log</button>
+      </div>
+
+      <!-- Row 4 -->
+      <div>
+        <button class="btn-operator " style="font-size: 25px;">AC</button>
+        <button class="btn-operator " style="font-size: 25px;">( )</button>
+        <button class="btn-operator " style="font-size: 25px;">%</button>
+        <button class="btn-operator " style="font-size: 25px;">/</button>
+      </div>
+
+      <!-- Row 5 -->
+      <div>
+        <button>7</button>
+        <button>8</button>
+        <button>9</button>
+        <button class="btn-operator"  style="font-size: 25px;">*</button>
+      </div>
+
+      <!-- Row 6 -->
+      <div>
+        <button>4</button>
+        <button>5</button>
+        <button>6</button>
+        <button class="btn-operator " style="font-size: 25px;">-</button>
+      </div>
+
+      <!-- Row 7 -->
+      <div>
+        <button>1</button>
+        <button>2</button>
+        <button>3</button>
+        <button data-value="+" class="btn-operator " style="font-size: 25px;">+</button>
+      </div>
+
+      <!-- Row 8 -->
+      <div>
+        <button>0</button>
+        <button>.</button>
+        <button class="btn-operator "><i class="fa-solid fa-delete-left" style="font-size: 20px;"></i></button>
+        <button data-action="calculate" class="equalBtn " style="font-size: 25px;">=</button>
+      </div>
+      
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
