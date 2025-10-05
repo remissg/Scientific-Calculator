@@ -45,9 +45,8 @@ function toggleScientific() {
 
 function addImplicitMultiplication(inputStr) {
     let result = inputStr;
-    // FIX: Added '^' to prevent inserting '*' between a number and '^' (e.g., 3^2 remains 3^2, not 3*^2)
-    result = result.replace(/(\d+|\)|\.)(?=[(lnlogsincostan√eπ^])/g, '$1*'); 
-    result = result.replace(/([eπ])(?=\d|ln|log|sin|cos|tan|√)/g, '$1*');
+    result = result.replace(/(\d+|\)|\.)(?=[(lnlogsincostan√eπ])/g, '$1*'); 
+    result = result.replace(/([eπ])(?=\d|ln|log|sin|cos|tan|√|\()/g, '$1*');
     return result;
 }
 
@@ -73,45 +72,32 @@ arr.forEach(button => {
 
                 // 1. Root (Square Root ONLY)
                 const sqrtRegex = new RegExp(`√(${argPattern})`, 'g');
-                
-                expr = expr.replace(sqrtRegex, (match, radicand) => {
-                    const rootArg = radicand.startsWith('(') && radicand.endsWith(')') ? radicand : `(${radicand})`;
-                    return `Math.sqrt(${rootArg})`; 
-                });
+                expr = expr.replace(sqrtRegex, `Math.sqrt($1)`); 
                 
                 // 2. Factorial
                 expr = expr.replace(/(\d+(\.\d+)?|\))!/g, (match, p1) => {
                     return `factorial(${p1})`;
                 });
                 
-                // 3. Percentage
+                // 3. Exponentiation (handle before constants)
+                expr = expr.replace(/\^/g, '**');
+                
+                // 4. Percentage
                 expr = expr.replace(/(\d+(\.\d+)?)%/g, '($1/100)');
                 
-                // 4. Normal Trigonometric Functions
-                expr = expr.replace(new RegExp(`sin${argPattern}`, 'g'), (match, arg) => {
-                    const finalArg = arg.startsWith('(') && arg.endsWith(')') ? arg : `(${arg})`;
-                    return `Math.sin(${finalArg} * ${DEG_TO_RAD})`;
-                });
-                expr = expr.replace(new RegExp(`cos${argPattern}`, 'g'), (match, arg) => {
-                    const finalArg = arg.startsWith('(') && arg.endsWith(')') ? arg : `(${arg})`;
-                    return `Math.cos(${finalArg} * ${DEG_TO_RAD})`;
-                });
-                expr = expr.replace(new RegExp(`tan${argPattern}`, 'g'), (match, arg) => {
-                    const finalArg = arg.startsWith('(') && arg.endsWith(')') ? arg : `(${arg})`;
-                    return `Math.tan(${finalArg} * ${DEG_TO_RAD})`;
-                });
+                // 5. Normal Trigonometric Functions
+                expr = expr.replace(new RegExp(`sin${argPattern}`, 'g'), `Math.sin($1 * ${DEG_TO_RAD})`);
+                expr = expr.replace(new RegExp(`cos${argPattern}`, 'g'), `Math.cos($1 * ${DEG_TO_RAD})`);
+                expr = expr.replace(new RegExp(`tan${argPattern}`, 'g'), `Math.tan($1 * ${DEG_TO_RAD})`);
                 
-                // 5. LOGARITHMIC FUNCTIONS
+                // 6. LOGARITHMIC FUNCTIONS
                 expr = expr.replace(new RegExp(`log${argPattern}`, 'g'), 'Math.log10($1)');
                 
                 
-                // 6. CONSTANTS AND EXPONENTS - REORDERED FOR CORRECT PARSING
-                // MUST RESOLVE CONSTANTS FIRST: e and π are JavaScript identifiers, Math.E and Math.PI are numbers.
+                // 7. CONSTANTS - REORDERED FOR CORRECT PARSING
                 expr = expr.replace(/π/g, `Math.PI`);
                 expr = expr.replace(/e/g, `Math.E`);
                 
-                // THEN RESOLVE EXPONENT: Now that 'e' is Math.E, 'e^2' becomes 'Math.E^2', which is correctly parsed as 'Math.E**2'
-                expr = expr.replace(/\^/g, '**'); 
 
                 let evaluationString = `
                     (function() {
@@ -154,7 +140,7 @@ arr.forEach(button => {
         else if (btnValue === "π") {
             const lastChar = str.slice(-1);
             if (/\d|\)|e|π/.test(lastChar)) {
-                str += "*π";
+                str += "π";
             } else {
                 str += "π"; 
             }
@@ -168,7 +154,7 @@ arr.forEach(button => {
         else if (btnValue === "e") {
             const lastChar = str.slice(-1);
             if (/\d|\)|π|e/.test(lastChar)) {
-                str += "*e";
+                str += "e";
             } else {
                 str += "e"; 
             }
@@ -204,8 +190,14 @@ arr.forEach(button => {
         }
         
         else if (btnValue === "inv") {
-            // Inv is treated as generic power operator
-            str += "^-1"; 
+            // Find the last number or parenthetical expression
+            const match = str.match(/(\d+(\.\d+)?|\([^)]+\))$/);
+            if (match) {
+                const lastPart = match[0];
+                const startIndex = str.lastIndexOf(lastPart);
+                // Replace the last part with its inverse form
+                str = str.substring(0, startIndex) + `(${lastPart})^(-1)`;
+            }
             inp.value = str;
         }
         
