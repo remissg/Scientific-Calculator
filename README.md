@@ -18,7 +18,8 @@ The calculator features a clean, intuitive interface with a distinctive modern d
 <img width="2759" height="1548" alt="Screenshot 2025-10-03 144128" src="https://github.com/user-attachments/assets/0d0cd367-2d29-49c1-9089-53950f9669a4" />
 
 ### Scientific Calculator 
-<img width="2756" height="1564" alt="Screenshot 2025-10-03 144158" src="https://github.com/user-attachments/assets/d816f16a-93b7-4756-83e5-473c95c3a082" />
+<img width="2736" height="1533" alt="Screenshot 2025-10-05 230808" src="https://github.com/user-attachments/assets/7bbcf996-59ec-4869-bdb5-115f1a3a2617" />
+
 
 -----
 
@@ -36,7 +37,7 @@ The calculator supports a rich set of mathematical operations, crucial for compl
 | Function Category | Functions Available | Description |
 | :--- | :--- | :--- |
 | **Trigonometry** | $\text{sin}$, $\text{cos}$, $\text{tan}$, $\text{inv}$ | Calculates sine, cosine, and tangent. All trigonometric inputs are assumed to be in **degrees**, and inverse results are returned in **degrees**, ensuring practical usability. |
-| **Logarithms** | $\text{ln}$, $\text{log}$ | Supports **natural logarithm** ($\text{ln}$, base $e$) and **common logarithm** ($\text{log}$, base 10). |
+| **Logarithms** | $\text{log}$ | Supports **common logarithm** ($\text{log}$, base 10). |
 | **Advanced Math**| $\wedge$ (Power), $\sqrt{}$ (Root), $x!$ (Factorial) | Handles exponentiation, square roots, and the factorial function for non-negative integers. |
 | **Constants** | $\pi$, $e$ | Precision constants for Pi and Euler's number are easily inserted into any expression. |
 
